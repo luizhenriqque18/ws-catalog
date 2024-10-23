@@ -1,8 +1,11 @@
 package io.github.luizhenriqque18.ws_catalog.service;
 
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import io.github.luizhenriqque18.ws_catalog.controller.dto.ProductResponse;
 import io.github.luizhenriqque18.ws_catalog.entity.Product;
 import io.github.luizhenriqque18.ws_catalog.repository.ProductRepository;
 
@@ -14,13 +17,20 @@ public class ProductService {
     public ProductService(ProductRepository repository) {
         this.repository = repository;
     }
-    
-    public Product save(ProductResponse response) {
-        Product entity = new Product();
-        entity.setName(response.name());
-        entity.setDescription(response.description());
-        entity.setPrice(response.price());
 
-        return repository.save(entity);
+    public Product save(Product product) {
+        return repository.save(product);
+    }
+
+    public Optional<Product> findById(Long id) {
+        return repository.findById(id);
+    }
+
+    public void delete(Long id) {
+        repository.deleteById(id);
+    }
+
+    public Page<Product> findAll(PageRequest pageable) {
+        return repository.findAll(pageable);
     }
 }
