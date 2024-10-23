@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.RestController;
 import io.github.luizhenriqque18.ws_catalog.controller.dto.ApiResponse;
 import io.github.luizhenriqque18.ws_catalog.controller.dto.PaginationResponse;
 import io.github.luizhenriqque18.ws_catalog.controller.dto.ProductResponse;
+import io.github.luizhenriqque18.ws_catalog.entity.Category;
 import io.github.luizhenriqque18.ws_catalog.entity.Product;
+import io.github.luizhenriqque18.ws_catalog.service.CategoryService;
 import io.github.luizhenriqque18.ws_catalog.service.ProductService;
 
 import org.springframework.beans.BeanUtils;
@@ -33,10 +35,20 @@ public class ProductController {
     @Autowired
     private ProductService service;
 
+    @Autowired
+    private CategoryService categoryService;
+
+
     @PostMapping()
-    public ResponseEntity<ProductResponse> create(@RequestBody ProductResponse response) {
+    public ResponseEntity<String> create(@RequestBody ProductResponse response) {
+
+        Optional<Category> cOptional = categoryService.findById(response.categoryResponse().id());
+
+        if (cOptional.isEmpty())
+            return ResponseEntity.status(404).body("Categoria não encontrado");
+
         Product product = service.save(response.toEntity());
-        return ResponseEntity.ok(ProductResponse.fromEntity(product));
+        return ResponseEntity.ok().body(product.toString());
     }
 
     @PatchMapping("/{id}")
@@ -44,19 +56,26 @@ public class ProductController {
             @PathVariable(value = "id") Long id,
             @RequestBody ProductResponse response) {
         Optional<Product> productOptional = service.findById(id);
+        Optional<Category> cOptional = categoryService.findById(response.categoryResponse().id());
+
+        if (cOptional.isEmpty())
+            return ResponseEntity.status(404).body("Categoria não encontrada");
 
         if (productOptional.isEmpty())
             return ResponseEntity.status(404).body("Produto não encontrado");
 
         Product product = productOptional.get();
+
         BeanUtils.copyProperties(response, product);
+        product.setId(id);
+        product.setCategoria(cOptional.get());
         service.save(product);
 
         return ResponseEntity.ok().body(product.toString());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity delete(@PathVariable(value = "id") Long id) {
+    public ResponseEntity<String> delete(@PathVariable(value = "id") Long id) {
 
         Optional<Product> productOptional = service.findById(id);
 

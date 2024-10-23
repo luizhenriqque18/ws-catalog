@@ -80,7 +80,7 @@ public class CatalogController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity delete(@PathVariable(value = "id") Long id) {
+    public ResponseEntity<String> delete(@PathVariable(value = "id") Long id) {
 
         Optional<Category> categoryOptional = service.findById(id);
 

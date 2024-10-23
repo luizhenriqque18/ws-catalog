@@ -9,6 +9,6 @@ public record CategoryResponse(Long id, String name) {
     }
 
     public Category toEntity() {
-        return new Category(name);
+        return new Category(id, name);
     }
 }
