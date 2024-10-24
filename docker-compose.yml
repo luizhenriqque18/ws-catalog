@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  application-ws:
+    build: .
+    environment:
+      JAVA_OPTS: "
+        -Dspring.datasource.url=jdbc:postgresql://db:5432/${POSTGRES_DB}
+        -Dspring.datasource.username=${POSTGRES_USER} 
+        -Dspring.datasource.password=${POSTGRES_PASSWORD} 
+        -Dserver.port=8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
