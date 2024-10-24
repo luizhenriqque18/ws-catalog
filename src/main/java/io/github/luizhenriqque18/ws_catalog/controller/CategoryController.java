@@ -1,6 +1,7 @@
 package io.github.luizhenriqque18.ws_catalog.controller;
 
 import java.util.Optional;
+import java.util.List;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -26,28 +28,29 @@ import io.github.luizhenriqque18.ws_catalog.entity.Category;
 import io.github.luizhenriqque18.ws_catalog.service.CategoryService;
 
 @RestController
-@RequestMapping("/catalog")
-public class CatalogController {
+@RequestMapping("/category")
+@CrossOrigin(origins = "*")
+public class CategoryController {
 
     @Autowired
     private CategoryService service;
 
     @PostMapping()
     public ResponseEntity<CategoryResponse> create(
-        @RequestParam(value = "parentCategoryId", required = false) Long parentCategoryId,
-        @RequestBody CategoryResponse response) {
-            Optional<Category> categoryParentOptional;
-            Category category = response.toEntity();
+            @RequestParam(value = "parentCategoryId", required = false) Long parentCategoryId,
+            @RequestBody CategoryResponse response) {
+        Optional<Category> categoryParentOptional;
+        Category category = response.toEntity();
 
-            if(parentCategoryId != null){
-                categoryParentOptional = service.findById(parentCategoryId);
-                if(categoryParentOptional.isEmpty()) {
-                    return ResponseEntity.status(404).build();
-                }
-                category.setParentCategory(categoryParentOptional.get());
-            }       
-            
-            return ResponseEntity.ok(CategoryResponse.fromEntity(service.save(category)));
+        if (parentCategoryId != null) {
+            categoryParentOptional = service.findById(parentCategoryId);
+            if (categoryParentOptional.isEmpty()) {
+                return ResponseEntity.status(404).build();
+            }
+            category.setParentCategory(categoryParentOptional.get());
+        }
+
+        return ResponseEntity.ok(CategoryResponse.fromEntity(service.save(category)));
     }
 
     @PatchMapping("/{id}")
@@ -62,13 +65,12 @@ public class CatalogController {
 
         Optional<Category> categoryParentOptional;
 
-    
         Category category = categoryOptional.get();
         BeanUtils.copyProperties(response, category);
 
-        if(parentCategoryId != null){
+        if (parentCategoryId != null) {
             categoryParentOptional = service.findById(parentCategoryId);
-            if(categoryParentOptional.isEmpty()) {
+            if (categoryParentOptional.isEmpty()) {
                 return ResponseEntity.status(404).body("Subcategoria não encontrado");
             }
             category.setParentCategory(categoryOptional.get());
@@ -86,6 +88,10 @@ public class CatalogController {
 
         if (categoryOptional.isEmpty()) {
             return ResponseEntity.status(404).body("Categoria não encontrado");
+        }
+
+        if(categoryOptional.get().getSubcategories().size() > 0) {
+            return ResponseEntity.status(401).body("Categoria em uso");
         }
 
         service.delete(id);
@@ -107,20 +113,25 @@ public class CatalogController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<CategoryResponse>> list(
-        @RequestParam(value = "page", defaultValue = "0") int page,
-        @RequestParam(value = "size", defaultValue = "10") int size,
-        @RequestParam(value = "sort", defaultValue= "id") String sort,
-        @RequestParam(value = "direction", defaultValue = "ASC") Direction direction) {
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sort", defaultValue = "id") String sort,
+            @RequestParam(value = "direction", defaultValue = "ASC") Direction direction) {
 
         PageRequest pageable = PageRequest.of(page, size, Sort.by(direction, sort));
         Page<Category> categoryPage = service.findAll(pageable);
         Page<CategoryResponse> result = categoryPage.map(CategoryResponse::fromEntity);
-        
+
         return ResponseEntity.ok(
-            new ApiResponse<CategoryResponse>(
-                result.getContent(),
-                PaginationResponse.fromPage(result)
-            )
-        );
+                new ApiResponse<CategoryResponse>(
+                        result.getContent(),
+                        PaginationResponse.fromPage(result)));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<CategoryResponse>> findAll() {
+        List<CategoryResponse> categoryOptional = service.findAll().stream().map(CategoryResponse::fromEntity).toList();
+
+        return ResponseEntity.ok().body(categoryOptional);
     }
 }

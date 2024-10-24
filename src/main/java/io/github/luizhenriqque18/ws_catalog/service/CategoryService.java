@@ -1,6 +1,7 @@
 package io.github.luizhenriqque18.ws_catalog.service;
 
 import java.util.Optional;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,5 +33,9 @@ public class CategoryService {
 
     public Page<Category> findAll(PageRequest pageable) {
         return repository.findAll(pageable);
+    }
+
+    public List<Category> findAll() {
+        return repository.findAll();
     }
 }

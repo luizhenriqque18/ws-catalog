@@ -31,7 +31,7 @@ public class Category {
     @JoinColumn(name = "parent_category_id")
     private Category parentCategory;
 
-    @OneToMany(mappedBy = "parentCategory", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "parentCategory", cascade = CascadeType.PERSIST)
     private Set<Category> subcategories = new HashSet<>();
 
     public Category() {}
@@ -72,6 +72,10 @@ public class Category {
 
     public void setParentCategory(Category parentCategory) {
         this.parentCategory = parentCategory;
+    }
+
+    public Set<Category> getSubcategories() {
+        return subcategories;
     }
 
     public String toString() {
